@@ -21,8 +21,7 @@
   ^-  (quip call diff)
   ?:  ?=(%create -.act)
     ::  called by publish contract: %deploy-and-init
-    ::  swap this out for 0x1111.1111 on testnet
-    ?>  =(0xd387.95ec.b77f.b88e.c577.6c20.d470.d13c.8d53.2169 id.caller.context)
+    ?>  =(0x1111.1111 id.caller.context)
     =/  =item
       :*  %&
           %:  hash-data
@@ -39,7 +38,7 @@
           org.act
       ==
     =-  `(result ~ [item ~] ~ -)
-    (produce-org-events:lib / org.act)
+    (produce-org-events:lib / id.p.item org.act)
   ::
   =/  org
     =+  (need (scry-state org-id.act))
@@ -61,7 +60,7 @@
       ==
     ::
         %add-sub-org
-      :-  (produce-org-events:lib where.act org.act)
+      :-  (produce-org-events:lib where.act id.org org.act)
       %^  modify-org:lib
         noun.org  where.act
       |=  =org:lib
@@ -73,20 +72,20 @@
     ::
         %replace-members
       :-  %+  weld  (nuke-tag:lib where.act)
-          (make-tag:lib where.act name.noun.org new.act)
+          (make-tag:lib where.act id.org new.act)
       %^  modify-org:lib
         noun.org  where.act
       |=(=org:lib org(members new.act))
     ::
         %add-member
-      :-  (add-tag:lib where.act name.noun.org ship.act)
+      :-  (add-tag:lib where.act id.org ship.act)
       %^  modify-org:lib
         noun.org  where.act
       |=  =org:lib
       org(members (~(put pn members.org) ship.act))
     ::
         %del-member
-      :-  (del-tag:lib where.act name.noun.org ship.act)
+      :-  (del-tag:lib where.act id.org ship.act)
       %^  modify-org:lib
         noun.org  where.act
       |=  =org:lib

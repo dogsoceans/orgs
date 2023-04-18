@@ -24,7 +24,11 @@
 ::  the actual state of the organization is maintained on-chain
 ::  and inside our %social-graph agent. to get info about an
 ::  org's member-set, just scry %social-graph.
-+$  state  [%0 hashes=(map hash:smart sequencer-receipt:uqbar)]
++$  state
+  $:  %0
+      my-orgs=(map org-id @t)  ::  org item ID to org name
+      hashes=(map hash:smart sequencer-receipt:uqbar)
+  ==
 +$  card  card:agent:gall
 --
 ::
@@ -53,6 +57,7 @@
     ++  on-load
       |=  old=vase
       ^-  (quip card _this)
+      ?.  =(%0 -.q.old)  on-init
       :_  this(state !<(_state old))
       ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl))
         ~
@@ -70,14 +75,14 @@
         ?+    mark  (on-poke:def mark vase)
             %orgs-receipt
           (ingest-receipt:hc !<(orgs-receipt vase))
-            %orgs-action
-          ?>  =(src our):bowl
-          (handle-action:hc !<(orgs-action vase))
             %wallet-update
           ?>  =(src our):bowl
           =+  !<(wallet-update:wallet vase)
           ?.  ?=(%sequencer-receipt -.-)  `state
           (share-receipt:hc |2:-)
+            %orgs-action
+          ?>  =(src our):bowl
+          (handle-action:hc !<(orgs-action vase))
         ==
       [cards this]
     ::
@@ -117,12 +122,20 @@
   =+  (sham |3:sequencer-receipt)
   ?>  (validate:sig our.bowl ship-sig.sequencer-receipt - now.bowl)
   ?>  (uqbar-validate:sig p.u.known-sequencer - uqbar-sig.sequencer-receipt)
+  ~|  "orgs: couldn't find org item in modified!"
+  =/  =org:con
+    =-  ;;(org:con ?>(?=(%& -.-) noun.p.-))
+    (got:big:eng modified.output.sequencer-receipt org-id)
   ::  make sure transaction was processed by our designated orgs contract
   ?.  =(orgs-contract-id contract.transaction.sequencer-receipt)
     ~&  >>>  "orgs: got transaction to contract other than designated one"
     `state
   ::  once verified, take output and convert events to pokes
-  :_  state(hashes (~(put by hashes.state) hash sequencer-receipt))
+  ::  TODO: if we were *removed*, nuke the tag and delete from my-orgs
+  :_  %=  state
+        my-orgs  (~(put by my-orgs.state) org-id name.org)
+        hashes  (~(put by hashes.state) hash sequencer-receipt)
+      ==
   %+  turn  events.output.sequencer-receipt
   |=  e=contract-event:eng
   %+  ~(poke pass:io /graph-poke)
@@ -132,7 +145,8 @@
   [%orgs ;;(org-event:con [label noun]:e)]
 ::
 ::  +take-our-receipt: take receipt for transaction that we executed.
-::  forward it to the set of ships that are members of the relevant org
+::  forward it to the set of ships that are members of the relevant org.
+::  if the transaction was to *remove* someone, make sure to send to them too
 ::
 ++  share-receipt
   |=  [=hash:smart =sequencer-receipt:uqbar]
@@ -156,12 +170,18 @@
       (scot %p our.bowl)  %social-graph  (scot %da now.bowl)
       /nodes/orgs/entity/(scot %t name.org)/(scot %t name.org)/noun
     ==
-  :_  state
+  ::  if transaction was %del-member, send receipt to them too
+  ::  TODO: handle %replace-members similarly
+  =?    mems
+      ?=(%del-member p.calldata.transaction.sequencer-receipt)
+    [;;(ship |3:q.calldata.transaction.sequencer-receipt) mems]
+  :_  state(my-orgs (~(put by my-orgs.state) org-id name.org))
   %+  turn  mems
   |=  =ship
   %+  ~(poke pass:io /share-receipt)
     [ship %orgs]
-  orgs-receipt+!>(`orgs-receipt`[org-id hash sequencer-receipt])
+  :-  %orgs-receipt
+  !>(`orgs-receipt`[org-id hash sequencer-receipt])
 ::
 ::  +handle-action: process an action by a controller to edit an org.
 ::  will produce a transaction and send it to wallet
@@ -169,5 +189,8 @@
 ++  handle-action
   |=  act=orgs-action
   ^-  (quip card _state)
+  ::  create the shell for the transaction
+
+  ::  send out to wallet
   !!
 --

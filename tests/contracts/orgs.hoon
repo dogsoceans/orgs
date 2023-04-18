@@ -9,6 +9,7 @@
 ::  test data
 ::
 ++  sequencer  caller-1
+++  publisher  ^-  caller:smart  [0x1111.1111 1 (id 0x1111.1111)]:zigs
 ++  caller-1  ^-  caller:smart  [addr-1 1 (id addr-1)]:zigs
 ++  caller-2  ^-  caller:smart  [addr-2 1 (id addr-2)]:zigs
 ++  caller-3  ^-  caller:smart  [addr-3 1 (id addr-3)]:zigs
@@ -60,6 +61,7 @@
           %-  make-pmap:smart
           ~['my-sub-org'^['my-sub-org' ~ addr-2:zigs ~ ~]]
       ==
+      (account 0x1111.1111 300.000.000 ~):zigs
       (account addr-1 300.000.000 ~):zigs
       (account addr-2 200.000.000 ~):zigs
   ==
@@ -96,7 +98,8 @@
     ==
   :^    chain
       [sequencer default-town-id batch=1 eth-block-height=0]
-    [fake-sig [%create my-org] my-shell]
+    =-  [fake-sig [%create my-org] -]
+    [publisher ~ id.p:orgs-pact [1 1.000.000] default-town-id 0]
   :*  gas=~
       errorcode=`%0
       modified=`(make-chain-state ~[org-item])
@@ -104,9 +107,9 @@
       ::  events
       :-  ~
       :~  :+  id.p:orgs-pact  %add-tag
-          [/squidz [%entity %orgs 'squidz'] [%ship ~hodzod]]
+          [/squidz [%address id.p.org-item] [%ship ~hodzod]]
           :+  id.p:orgs-pact  %add-tag
-          [/squidz [%entity %orgs 'squidz'] [%ship ~walrus]]
+          [/squidz [%address id.p.org-item] [%ship ~walrus]]
       ==
   ==
 ::

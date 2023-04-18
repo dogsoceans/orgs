@@ -40,12 +40,12 @@
     [%del-member org-id=id where=tag =ship]
   ==
 ::
-::  matches %social-graph API, but nodes always entities/ships
+::  matches %social-graph API, but always address->ships
 ::  nests under contract `event`
 ::
 +$  org-event
-  $%  [%add-tag =tag from=[%entity %orgs name=@t] to=[%ship @p]]
-      [%del-tag =tag from=[%entity %orgs name=@t] to=[%ship @p]]
+  $%  [%add-tag =tag from=[%address address] to=[%ship @p]]
+      [%del-tag =tag from=[%address address] to=[%ship @p]]
       [%nuke-tag =tag]  ::  remove this tag from all edges
       [%nuke-top-level-tag =tag]  :: remove all tags with same first element
   ==
@@ -53,14 +53,14 @@
 ::  helpers for producing events
 ::
 ++  add-tag
-  |=  [=tag entity=@t =ship]
+  |=  [=tag =id =ship]
   ^-  (list org-event)
-  [%add-tag tag [%entity %orgs entity] [%ship ship]]^~
+  [%add-tag tag [%address id] [%ship ship]]^~
 ::
 ++  del-tag
-  |=  [=tag entity=@t =ship]
+  |=  [=tag =id =ship]
   ^-  (list org-event)
-  [%del-tag tag [%entity %orgs entity] [%ship ship]]^~
+  [%del-tag tag [%address id] [%ship ship]]^~
 ::
 ++  nuke-tag
   |=  =tag
@@ -68,16 +68,16 @@
   [%nuke-tag tag]^~
 ::
 ++  make-tag
-  |=  [=tag entity=@t members=(pset ship)]
+  |=  [=tag =id members=(pset ship)]
   ^-  (list event)
   %+  turn  ~(tap pn members)
   |=  =ship
-  [%add-tag tag [%entity %orgs entity] [%ship ship]]
+  [%add-tag tag [%address id] [%ship ship]]
 ::
 ::  make all the add-tag events for a new org
 ::
 ++  produce-org-events
-  |=  [pre=path =org]
+  |=  [pre=path =id =org]
   ^-  (list org-event)
   =/  =tag
     ?~  pre  /[name.org]
@@ -86,12 +86,12 @@
   %+  weld
     %+  turn  ~(tap pn members.org)
     |=  =ship
-    [%add-tag tag [%entity %orgs i.tag] [%ship ship]]
+    [%add-tag tag [%address id] [%ship ship]]
   ^-  (list org-event)
   %-  zing
   %+  turn  ~(val py sub-orgs.org)
   |=  sub=^org
-  (produce-org-events tag sub)
+  (produce-org-events tag id sub)
 ::
 ::  cannot touch name.org
 +$  org-mod  $-(org org)

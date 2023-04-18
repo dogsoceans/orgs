@@ -12,6 +12,5 @@
 +$  orgs-receipt
   [=org-id =hash:smart =sequencer-receipt:uqbar]
 ::
-+$  orgs-action
-  action:con
++$  orgs-action  action:con  ::  chain actions
 --
