@@ -7,6 +7,7 @@
     ::  unilaterally modify.
     +$  org
       $:  name=@t
+          parent-path=path
           desc=(unit @t)  ::  optional label or description
           controller=id   ::  contract that is permitted to edit org
           members=(pset ship)
@@ -17,7 +18,8 @@
 +$  tag  path
 ::
 +$  action
-  $%  ::  call this upon contract deployment
+  $%
+  ::  create top level org––parent-path will be ignored
     [%create =org]
   ::
   ::  used to modify contents of an org. *cannot edit name-path*
@@ -42,6 +44,7 @@
 ::
 ::  matches %social-graph API, but always address->ships
 ::  nests under contract `event`
+::  tags are always absolute, relative to a top-level org
 ::
 +$  org-event
   $%  [%add-tag =tag from=[%address address] to=[%ship @p]]
@@ -77,11 +80,11 @@
 ::  make all the add-tag events for a new org
 ::
 ++  produce-org-events
-  |=  [pre=path =id =org]
+  |=  [=id =org]
   ^-  (list org-event)
   =/  =tag
-    ?~  pre  /[name.org]
-    (snoc pre name.org)
+    ?~  parent-path.org  /[name.org]
+    (snoc parent-path.org name.org)
   ?>  ?=(^ tag)
   %+  weld
     %+  turn  ~(tap pn members.org)
@@ -91,7 +94,7 @@
   %-  zing
   %+  turn  ~(val py sub-orgs.org)
   |=  sub=^org
-  (produce-org-events tag id sub)
+  (produce-org-events id sub)
 ::
 ::  cannot touch name.org
 +$  org-mod  $-(org org)

@@ -43,6 +43,7 @@
     ::
     ++  on-init
       :_  this(state *_state)
+      :-  watch-indexer:hc
       ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl))
         ~
       ~&  >>>  "orgs: error: must have %social-graph installed"
@@ -59,6 +60,7 @@
       ^-  (quip card _this)
       ?.  =(%0 -.q.old)  on-init
       :_  this(state !<(_state old))
+      :-  watch-indexer:hc
       ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl))
         ~
       ~&  >>>  "orgs: error: must have %social-graph installed"
@@ -86,8 +88,27 @@
         ==
       [cards this]
     ::
+    ++  on-agent
+      |=  [=wire =sign:agent:gall]
+      ^-  (quip card _this)
+      ?.  ?=([%batch-watch ~] wire)
+        (on-agent:def wire sign)
+      ?.  ?=(%fact -.sign)
+        ?:  ?=(%kick -.sign)
+          ::  attempt to re-sub
+          [[watch-indexer:hc ~] this]
+        (on-agent:def wire sign)
+      =/  upd  !<(update:indexer q.cage.sign)
+      ?.  ?=(%batch-order -.upd)  `this
+      ::  when indexer has received a new batch,
+      ::  check on all our txn hashes and clear
+      ::  if receipts were valid. (TODO)
+      ::
+      ::  we can also use this update as a time to scry
+      ::  for our tracked orgs and "re-sync" if needed.
+      `this(hashes.state ~)
+    ::
     ++  on-peek   handle-scry:hc
-    ++  on-agent  on-agent:def
     ++  on-watch  on-watch:def
     ++  on-arvo   on-arvo:def
     ++  on-leave  on-leave:def
@@ -131,20 +152,31 @@
     ~&  >>>  "orgs: got transaction to contract other than designated one"
     `state
   ::  once verified, take output and convert events to pokes
+  ::  if we were not yet in this org, produce all tags for the org
+  ::  and pipe them into social-graph to synchronize full state
+  =/  events=(list edit:sg)
+    ?.  (~(has by my-orgs.state) org-id)
+      %+  turn  ~(tap pn:smart members.org)
+      |=  =ship
+      :-  %orgs
+      :^  %add-tag
+        (snoc parent-path.org name.org)
+      [%address org-id]  [%ship ship]
+    %+  turn  events.output.sequencer-receipt
+    |=  e=contract-event:eng
+    [%orgs ;;(org-event:con [label noun]:e)]
   ::  TODO: if we were *removed*, nuke the tag and delete from my-orgs
   :_  %=  state
         my-orgs  (~(put by my-orgs.state) org-id name.org)
         hashes  (~(put by hashes.state) hash sequencer-receipt)
       ==
-  %+  turn  events.output.sequencer-receipt
-  |=  e=contract-event:eng
+  %+  turn  events
+  |=  =edit:sg
   %+  ~(poke pass:io /graph-poke)
     [our.bowl %social-graph]
-  :-  %social-graph-edit
-  !>  ^-  edit:sg
-  [%orgs ;;(org-event:con [label noun]:e)]
+  [%social-graph-edit !>(edit)]
 ::
-::  +take-our-receipt: take receipt for transaction that we executed.
+::  +share-receipt: take receipt for transaction that we executed.
 ::  forward it to the set of ships that are members of the relevant org.
 ::  if the transaction was to *remove* someone, make sure to send to them too
 ::
@@ -162,10 +194,8 @@
   ~|  "orgs: couldn't find org item in modified!"
   =/  =org-id
     (slav %ux (head q:(need origin)))
-  ~&  >>  org-id
   =/  =org:con
-    =-  ~&  >>  -
-        ;;(org:con ?>(?=(%& -.-) noun.p.-))
+    =-  ;;(org:con ?>(?=(%& -.-) noun.p.-))
     (got:big:eng modified.output.sequencer-receipt org-id)
   ::  get members, then poke out receipt to all
   =/  mems=(list ship)
@@ -211,4 +241,9 @@
       orgs-contract-town
       noun+q.orgs-action
   ==
+::
+++  watch-indexer
+  ^-  card
+  %+  ~(watch pass:io /batch-watch)  [our.bowl %uqbar]
+  /indexer/orgs/batch-order/(scot %ux orgs-contract-town)
 --

@@ -34,10 +34,10 @@
           town.context
           name.org.act
           %org
-          org.act
+          org.act(parent-path ~)
       ==
     =-  `(result ~ [item ~] ~ -)
-    (produce-org-events:lib / id.p.item org.act)
+    (produce-org-events:lib id.p.item org.act)
   ::
   =/  org
     =+  (need (scry-state org-id.act))
@@ -59,7 +59,9 @@
       ==
     ::
         %add-sub-org
-      :-  (produce-org-events:lib where.act id.org org.act)
+      :-  (produce-org-events:lib id.org org.act)
+      =.  parent-path.org.act
+        (snoc parent-path.noun.org name.noun.org)
       %^  modify-org:lib
         noun.org  where.act
       |=  =org:lib
@@ -70,21 +72,24 @@
       !!  ::  TODO
     ::
         %replace-members
-      :-  %+  weld  (nuke-tag:lib where.act)
-          (make-tag:lib where.act id.org new.act)
+      =/  =tag:lib  (weld parent-path.noun.org where.act)
+      :-  %+  weld  (nuke-tag:lib tag)
+          (make-tag:lib tag id.org new.act)
       %^  modify-org:lib
         noun.org  where.act
       |=(=org:lib org(members new.act))
     ::
         %add-member
-      :-  (add-tag:lib where.act id.org ship.act)
+      =/  =tag:lib  (weld parent-path.noun.org where.act)
+      :-  (add-tag:lib tag id.org ship.act)
       %^  modify-org:lib
         noun.org  where.act
       |=  =org:lib
       org(members (~(put pn members.org) ship.act))
     ::
         %del-member
-      :-  (del-tag:lib where.act id.org ship.act)
+      =/  =tag:lib  (weld parent-path.noun.org where.act)
+      :-  (del-tag:lib tag id.org ship.act)
       %^  modify-org:lib
         noun.org  where.act
       |=  =org:lib

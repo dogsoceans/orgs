@@ -1,10 +1,11 @@
-/-  sg=social-graph, uqbar=zig-uqbar, wallet=zig-wallet
+/-  sg=social-graph, uqbar=zig-uqbar,
+    wallet=zig-wallet, indexer=zig-indexer
 /+  smart=zig-sys-smart, eng=zig-sys-engine
 /=  con  /con/lib/orgs
 |%
 ::  set this to the deployed orgs contract
 ++  orgs-contract-id  ^-  id:smart
-  0x3d6b.ee91.19dd.e085.80d0.6539.4355.7aea.a598.332e.c55b.77ff.0833.4416.ad5a.83c5
+  0xb0f4.f607.41cf.4fac.3998.c923.cd1b.7132.f1b5.0d08.ee80.f00c.b23b.22b1.8b3c.c9c2
 ::
 ++  orgs-contract-town  ^-  id:smart
   0x0
