@@ -3,15 +3,14 @@
 ::  manage an organization on-chain
 ::
 ::  this contract is designed to emit updates to a %social-graph.
-::  NOT FOR DAOs! DAOs should be self-governing. orgs.hoon allows
-::  users to create user-controlled organizations. control of the
-::  org is delegated to an id, which can be a multisig contract,
-::  some person's address, or something else entirely...
+::  orgs.hoon allows users to create user-controlled organizations.
+::  control of the org is delegated to an id, which can be a
+::  multisig contract, some person's address, or something else
+::  entirely... to make a DAO, need to build a separate voting contract
+::  that acts as an org-controller.
 ::
-::  why not generic? one likely wants to subscribe to events from
-::  one contract per organization. in the future, watching events
-::  associated with one item in particular could be easy, in which
-::  case, can genericize this easily.
+::  this version of the contract is generic. anyone can deploy
+::  a new org item and use this contract logic to manage it.
 ::
 /+  *zig-sys-smart
 /=  lib  /con/lib/orgs
@@ -20,8 +19,8 @@
   |=  act=action:lib
   ^-  (quip call diff)
   ?:  ?=(%create -.act)
-    ::  called by publish contract: %deploy-and-init
-    ?>  =(0x1111.1111 id.caller.context)
+    ::  org must be created by its controller
+    ?>  =(controller.org.act id.caller.context)
     =/  =item
       :*  %&
           %:  hash-data
@@ -43,7 +42,7 @@
   =/  org
     =+  (need (scry-state org-id.act))
     (husk org:lib - `this.context ~)
-  ::  caller must control identified org
+  ::  to manage, caller must control identified org
   ?>  =(id.caller.context controller.noun.org)
   =^  events  noun.org
     ?-    -.act

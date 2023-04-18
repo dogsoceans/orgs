@@ -189,14 +189,23 @@
 ++  handle-action
   |=  =orgs-action
   ^-  (quip card _state)
-  ?<  ?=(%create -.q.orgs-action)
+  ::  if we are creating an org, calc the ID of the item
+  =/  =org-id
+    ?.  ?=(%create -.q.orgs-action)
+      org-id.q.orgs-action
+    %:  hash-data:eng
+        orgs-contract-id
+        p.orgs-action
+        orgs-contract-town
+        name.org.q.orgs-action
+    ==
   :_  state  :_  ~
   %+  ~(poke pass:io /orgs-txn)
     [our.bowl %wallet]
   :-  %wallet-poke
   !>  ^-  wallet-poke:wallet
   :*  %transaction
-      `[%orgs /(scot %ux org-id.q.orgs-action)]
+      `[%orgs /(scot %ux org-id)]
       p.orgs-action
       orgs-contract-id
       orgs-contract-town

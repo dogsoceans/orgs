@@ -1,6 +1,5 @@
-/-  sg=social-graph, eng=zig-engine,
-    uqbar=zig-uqbar, wallet=zig-wallet
-/+  smart=zig-sys-smart
+/-  sg=social-graph, uqbar=zig-uqbar, wallet=zig-wallet
+/+  smart=zig-sys-smart, eng=zig-sys-engine
 /=  con  /con/lib/orgs
 |%
 ::  set this to the deployed orgs contract
