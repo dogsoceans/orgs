@@ -79,7 +79,7 @@
           ?>  =(src our):bowl
           =+  !<(wallet-update:wallet vase)
           ?.  ?=(%sequencer-receipt -.-)  `state
-          (share-receipt:hc |2:-)
+          (share-receipt:hc +.-)
             %orgs-action
           ?>  =(src our):bowl
           (handle-action:hc !<(orgs-action vase))
@@ -149,27 +149,27 @@
 ::  if the transaction was to *remove* someone, make sure to send to them too
 ::
 ++  share-receipt
-  |=  [=hash:smart =sequencer-receipt:uqbar]
+  |=  [=origin:wallet =hash:smart =sequencer-receipt:uqbar]
   ^-  (quip card _state)
   ::  this receipt is sent to us from wallet, so no need to verify sigs.
+  ?.  =(%0 errorcode.output.sequencer-receipt)
+    ~&  >>>  "orgs: transaction failed"
+    `state
   ::  grab org info from output
   ?.  =(orgs-contract-id contract.transaction.sequencer-receipt)
     ~&  >>>  "orgs: got transaction to contract other than designated one"
     `state
   ~|  "orgs: couldn't find org item in modified!"
   =/  =org-id
-    -.-.modified.output.sequencer-receipt
+    (slav %ux (head q:(need origin)))
+  ~&  >>  org-id
   =/  =org:con
-    =-  ;;(org:con ?>(?=(%& -.-) noun.p.-))
+    =-  ~&  >>  -
+        ;;(org:con ?>(?=(%& -.-) noun.p.-))
     (got:big:eng modified.output.sequencer-receipt org-id)
-  ::  scry %social-graph for members, then poke out receipt to all
+  ::  get members, then poke out receipt to all
   =/  mems=(list ship)
-    =-  ?.  ?=(%nodes -.-)  ~
-        (murn ~(tap in +.-) |=(n=node:sg ?:(?=(%ship -.n) `+.n ~)))
-    .^  graph-result:sg  %gx
-      (scot %p our.bowl)  %social-graph  (scot %da now.bowl)
-      /nodes/orgs/entity/(scot %t name.org)/(scot %t name.org)/noun
-    ==
+    ~(tap pn:smart members.org)
   ::  if transaction was %del-member, send receipt to them too
   ::  TODO: handle %replace-members similarly
   =?    mems
@@ -187,10 +187,19 @@
 ::  will produce a transaction and send it to wallet
 ::
 ++  handle-action
-  |=  act=orgs-action
+  |=  =orgs-action
   ^-  (quip card _state)
-  ::  create the shell for the transaction
-
-  ::  send out to wallet
-  !!
+  ?<  ?=(%create -.q.orgs-action)
+  :_  state  :_  ~
+  %+  ~(poke pass:io /orgs-txn)
+    [our.bowl %wallet]
+  :-  %wallet-poke
+  !>  ^-  wallet-poke:wallet
+  :*  %transaction
+      `[%orgs /(scot %ux org-id.q.orgs-action)]
+      p.orgs-action
+      orgs-contract-id
+      orgs-contract-town
+      noun+q.orgs-action
+  ==
 --
