@@ -85,6 +85,24 @@
             %orgs-action
           ?>  =(src our):bowl
           (handle-action:hc !<(orgs-action vase))
+            %orgs-resync
+          ?>  =(src our):bowl
+          ::  sync our local representation to the on-chain
+          ::  item for each org we know to track.
+          ~&  >>  "orgs: resyncing representations to graph"
+          =/  org-map=(map id:smart org:con)
+            %-  ~(urn by my-orgs.state)
+            |=  [=id:smart @t]
+            =/  =update:indexer
+              .^  update:indexer  %gx
+                (scot %p our.bowl)  %indexer  (scot %da now.bowl)
+                /newest/item/(scot %ux orgs-contract-town)/(scot %ux id)/noun
+              ==
+            ?>  ?=(%newest-item -.update)
+            ?>  ?=(%& -.item.update)
+            ;;(org:con noun.p.item.update)
+          :_  state
+          (zing (turn ~(tap by org-map) org-to-graph-pokes:hc))
         ==
       [cards this]
     ::
@@ -103,9 +121,6 @@
       ::  when indexer has received a new batch,
       ::  check on all our txn hashes and clear
       ::  if receipts were valid. (TODO)
-      ::
-      ::  we can also use this update as a time to scry
-      ::  for our tracked orgs and "re-sync" if needed.
       `this(hashes.state ~)
     ::
     ++  on-peek   handle-scry:hc
@@ -151,30 +166,20 @@
   ?.  =(orgs-contract-id contract.transaction.sequencer-receipt)
     ~&  >>>  "orgs: got transaction to contract other than designated one"
     `state
+  ~&  >>  "orgs: ingesting receipt from {<src.bowl>}"
   ::  once verified, take output and convert events to pokes
   ::  if we were not yet in this org, produce all tags for the org
   ::  and pipe them into social-graph to synchronize full state
-  =/  events=(list edit:sg)
-    ?.  (~(has by my-orgs.state) org-id)
-      %+  turn  ~(tap pn:smart members.org)
-      |=  =ship
-      :-  %orgs
-      :^  %add-tag
-        (snoc parent-path.org name.org)
-      [%address org-id]  [%ship ship]
-    %+  turn  events.output.sequencer-receipt
-    |=  e=contract-event:eng
-    [%orgs ;;(org-event:con [label noun]:e)]
-  ::  TODO: if we were *removed*, nuke the tag and delete from my-orgs
   :_  %=  state
         my-orgs  (~(put by my-orgs.state) org-id name.org)
         hashes  (~(put by hashes.state) hash sequencer-receipt)
       ==
-  %+  turn  events
-  |=  =edit:sg
-  %+  ~(poke pass:io /graph-poke)
-    [our.bowl %social-graph]
-  [%social-graph-edit !>(edit)]
+  ?.  (~(has by my-orgs.state) org-id)
+    (org-to-graph-pokes org-id org)
+  %+  turn  events.output.sequencer-receipt
+  |=  e=contract-event:eng
+  %-  graph-poke
+  ;;(org-event:con [label noun]:e)
 ::
 ::  +share-receipt: take receipt for transaction that we executed.
 ::  forward it to the set of ships that are members of the relevant org.
@@ -201,7 +206,6 @@
   =/  mems=(list ship)
     ~(tap pn:smart members.org)
   ::  if transaction was %del-member, send receipt to them too
-  ::  TODO: handle %replace-members similarly
   =?    mems
       ?=(%del-member p.calldata.transaction.sequencer-receipt)
     [;;(ship |3:q.calldata.transaction.sequencer-receipt) mems]
@@ -241,6 +245,39 @@
       orgs-contract-town
       noun+q.orgs-action
   ==
+::
+++  graph-poke
+  |=  =org-event:con
+  ^-  card
+  %+  ~(poke pass:io /graph-poke)
+    [our.bowl %social-graph]
+  social-graph-edit+!>(`edit:sg`[%orgs org-event])
+::
+++  make-member-tags
+  |=  [=id:smart =org:con]
+  ^-  (list card)
+  %+  turn  ~(tap pn:smart members.org)
+  |=  =ship
+  %-  graph-poke
+  :^  %add-tag
+    (snoc parent-path.org name.org)
+  [%address id]  [%ship ship]
+::
+::  for an org, at every level of sub-org, clear the
+::  existing data, if any, and produce pokes to synchronize
+::  member-set with what's on-chain.
+::
+++  org-to-graph-pokes
+  |=  [=id:smart =org:con]
+  ^-  (list card)
+  ~&  >  org
+  :-  (graph-poke [%nuke-tag (snoc parent-path.org name.org)])
+  %-  zing
+  :-  (make-member-tags id org)
+  ^-  (list (list card))
+  %+  turn  ~(val py:smart sub-orgs.org)
+  |=  sub=org:con
+  ^$(org sub)
 ::
 ++  watch-indexer
   ^-  card

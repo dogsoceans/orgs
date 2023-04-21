@@ -47,6 +47,8 @@
   =^  events  noun.org
     ?-    -.act
         %edit-org
+      ::  empty tag defaults to the top level org
+      =?  where.act  ?=(~ where.act)  /[name.noun.org]
       :-  ~
       %^  modify-org:lib
         noun.org  where.act
@@ -72,6 +74,8 @@
       !!  ::  TODO
     ::
         %replace-members
+      ::  empty tag defaults to the top level org
+      =?  where.act  ?=(~ where.act)  /[name.noun.org]
       =/  =tag:lib  (weld parent-path.noun.org where.act)
       :-  %+  weld  (nuke-tag:lib tag)
           (make-tag:lib tag id.org new.act)
@@ -80,6 +84,8 @@
       |=(=org:lib org(members new.act))
     ::
         %add-member
+      ::  empty tag defaults to the top level org
+      =?  where.act  ?=(~ where.act)  /[name.noun.org]
       =/  =tag:lib  (weld parent-path.noun.org where.act)
       :-  (add-tag:lib tag id.org ship.act)
       %^  modify-org:lib
@@ -88,6 +94,8 @@
       org(members (~(put pn members.org) ship.act))
     ::
         %del-member
+      ::  empty tag defaults to the top level org
+      =?  where.act  ?=(~ where.act)  /[name.noun.org]
       =/  =tag:lib  (weld parent-path.noun.org where.act)
       :-  (del-tag:lib tag id.org ship.act)
       %^  modify-org:lib
