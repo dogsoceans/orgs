@@ -54,11 +54,14 @@
   :~  orgs-pact
       %-  my-test-org
       :*  'my-test-org'
+          /
           `'an org controlled by 0xd387...'
           addr-1:zigs
           ~
           %-  make-pmap:smart
-          ~['my-sub-org'^['my-sub-org' ~ addr-2:zigs ~ ~]]
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+          ==
       ==
       (account addr-1 300.000.000 ~):zigs
       (account addr-2 200.000.000 ~):zigs
@@ -73,6 +76,7 @@
   =/  my-org
     ^-  org:org-lib
     :*  'squidz'
+        /
         `'an organization for squids'
         addr-1:zigs
         (make-pset:smart ~[~hodzod ~walrus])
@@ -80,20 +84,9 @@
     ==
   =/  org-item
     ^-  item:smart
-    :*  %&
-        %:  hash-data:smart
-            id.p:orgs-pact
-            addr-1:zigs
-            default-town-id
-            'squidz'
-        ==
-        id.p:orgs-pact
-        addr-1:zigs
-        default-town-id
-        'squidz'
-        %org
-        my-org
-    ==
+    :+  %&
+      (hash-data:smart id.p:orgs-pact addr-1:zigs default-town-id 'squidz')
+    [id.p:orgs-pact addr-1:zigs default-town-id 'squidz' %org my-org]
   :^    chain
       [sequencer default-town-id batch=1 eth-block-height=0]
     [fake-sig [%create my-org] my-shell]
@@ -114,6 +107,7 @@
   =/  my-org
     ^-  org:org-lib
     :*  'squidz'
+        /
         `'an organization for squids'
         addr-1:zigs
         (make-pset:smart ~[~hodzod ~walrus])
@@ -121,20 +115,9 @@
     ==
   =/  org-item
     ^-  item:smart
-    :*  %&
-        %:  hash-data:smart
-            id.p:orgs-pact
-            addr-1:zigs
-            default-town-id
-            'squidz'
-        ==
-        id.p:orgs-pact
-        addr-1:zigs
-        default-town-id
-        'squidz'
-        %org
-        my-org
-    ==
+    :+  %&
+      (hash-data:smart id.p:orgs-pact addr-1:zigs default-town-id 'squidz')
+    [id.p:orgs-pact addr-1:zigs default-town-id 'squidz' %org my-org]
   :^    chain
       [sequencer default-town-id batch=1 eth-block-height=0]
     =-  [fake-sig [%create my-org] -]
@@ -144,6 +127,46 @@
       modified=`~
       burned=`~
       events=`~
+  ==
+::
+++  test-zx-create-with-sub-orgs  ^-  test-txn
+  =/  my-org
+    ^-  org:org-lib
+    :*  'squidz'
+        /
+        `'an organization for squids'
+        addr-1:zigs
+        (make-pset:smart ~[~hodzod ~walrus])
+        %-  make-pmap:smart
+        :~  :-  'loach'
+            ['loach' /squidz ~ addr-1:zigs (make-pset:smart ~[~hodzod]) ~]
+            :-  'loch'
+            ['loch' /squidz ~ addr-1:zigs (make-pset:smart ~[~walrus]) ~]
+        ==
+    ==
+  =/  org-item
+    ^-  item:smart
+    :+  %&
+      (hash-data:smart id.p:orgs-pact addr-1:zigs default-town-id 'squidz')
+    [id.p:orgs-pact addr-1:zigs default-town-id 'squidz' %org my-org]
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%create my-org] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      modified=`(make-chain-state ~[org-item])
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/squidz [%address id.p.org-item] [%ship ~hodzod]]
+          :+  id.p:orgs-pact  %add-tag
+          [/squidz [%address id.p.org-item] [%ship ~walrus]]
+          :+  id.p:orgs-pact  %add-tag
+          [/squidz/loach [%address id.p.org-item] [%ship ~hodzod]]
+          :+  id.p:orgs-pact  %add-tag
+          [/squidz/loch [%address id.p.org-item] [%ship ~walrus]]
+      ==
   ==
 ::
 ::  tests for %edit-org
@@ -172,11 +195,14 @@
       :_  ~
       %-  my-test-org
       :*  'my-test-org'
+          /
           `'newdesc'
           addr-1:zigs
           ~
           %-  make-pmap:smart
-          ~['my-sub-org'^['my-sub-org' ~ addr-2:zigs ~ ~]]
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+          ==
       ==
       burned=`~
       events=`~
@@ -196,11 +222,14 @@
       :_  ~
       %-  my-test-org
       :*  'my-test-org'
+          /
           `'an org controlled by 0xd387...'
           addr-1:zigs
           ~
           %-  make-pmap:smart
-          ~['my-sub-org'^['my-sub-org' `'newdesc' addr-2:zigs ~ ~]]
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org `'newdesc' addr-2:zigs ~ ~]
+          ==
       ==
       burned=`~
       events=`~
@@ -220,13 +249,129 @@
       :_  ~
       %-  my-test-org
       :*  'my-test-org'
+          /
           `'an org controlled by 0xd387...'
           addr-1:zigs
           ~
           %-  make-pmap:smart
-          ~['my-sub-org'^['my-sub-org' ~ addr-1:zigs ~ ~]]
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-1:zigs ~ ~]
+          ==
       ==
       burned=`~
       events=`~
+  ==
+::
+::  tests for %add-sub-org
+::
+++  test-xz-add-sub-org  ^-  test-txn
+  =/  loach-sub-org
+    ^-  org:org-lib
+    ['loach' /my-test-org ~ addr-1:zigs (make-pset:smart ~[~hodzod]) ~]
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-sub-org my-test-org-id / loach-sub-org] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          ~
+          %-  make-pmap:smart
+          ^-  (list [@t org:org-lib])
+          :~  ['my-sub-org' ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]]
+              ['loach' loach-sub-org]
+          ==
+      ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/my-test-org/loach [%address my-test-org-id] [%ship ~hodzod]]
+      ==
+  ==
+::
+++  test-xy-add-sub-org-name-already-taken  ^-  test-txn
+  =/  my-sub-org
+    ^-  org:org-lib
+    ['my-sub-org' /my-test-org ~ addr-1:zigs (make-pset:smart ~[~hodzod]) ~]
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-sub-org my-test-org-id / my-sub-org] my-shell]
+  :*  gas=~
+      errorcode=`%6
+      modified=`~
+      burned=`~
+      events=`~
+  ==
+::
+++  test-xx-add-sub-org-bad-path  ^-  test-txn
+  =/  loach-sub-org
+    ^-  org:org-lib
+    ['loach-sub-org' /my-test-org ~ addr-1:zigs (make-pset:smart ~[~hodzod]) ~]
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-sub-org my-test-org-id /not/here loach-sub-org] my-shell]
+  :*  gas=~
+      errorcode=`%6
+      modified=`~
+      burned=`~
+      events=`~
+  ==
+::
+++  test-xw-add-sub-org-missing-path  ^-  test-txn
+  =/  loach-sub-org
+    ^-  org:org-lib
+    ['loach-sub-org' /my-test-org ~ addr-1:zigs (make-pset:smart ~[~hodzod]) ~]
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-sub-org my-test-org-id /not-here loach-sub-org] my-shell]
+  :*  gas=~
+      errorcode=`%6
+      modified=`~
+      burned=`~
+      events=`~
+  ==
+::
+++  test-xw-add-sub-org-to-sub-org  ^-  test-txn
+  =/  loach-sub-org
+    ^-  org:org-lib
+    ['loach' /my-test-org/my-sub-org ~ addr-1:zigs (make-pset:smart ~[~hodzod]) ~]
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-sub-org my-test-org-id /my-test-org/my-sub-org loach-sub-org] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          ~
+          %-  make-pmap:smart
+          :_  ~
+          :-  'my-sub-org'
+          :*  'my-sub-org'  /my-test-org  ~  addr-2:zigs  ~
+              %-  make-pmap:smart
+              :_  ~
+              ['loach' loach-sub-org]
+          ==
+      ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/my-test-org/my-sub-org/loach [%address my-test-org-id] [%ship ~hodzod]]
+      ==
   ==
 --

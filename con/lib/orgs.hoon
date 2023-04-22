@@ -29,7 +29,7 @@
   ::  must nest underneath existing org-structure
     [%add-sub-org org-id=id where=tag =org]
   ::
-  ::  "it's over" -- can only use this on sub-orgs?
+  ::  "it's over" –– calling on top-level org is an item burn
     [%delete-org org-id=id where=tag]
   ::
   ::  replace existing member-set of an org/sub-org

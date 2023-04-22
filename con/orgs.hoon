@@ -44,6 +44,13 @@
     (husk org:lib - `this.context ~)
   ::  to manage, caller must control identified org
   ?>  =(id.caller.context controller.noun.org)
+  ?:  ?&  ?=(%delete-org -.act)
+          ?|  =(where.act /[name.noun.org])
+              =(where.act ~)
+      ==  ==
+    ::  deleting the top level org is a burn -- use with caution!
+    =-  `(result ~ ~ [&+org ~] -)
+    [%nuke-top-level-tag /[name.noun.org]]^~
   =^  events  noun.org
     ?-    -.act
         %edit-org
@@ -61,17 +68,24 @@
       ==
     ::
         %add-sub-org
+      ::  empty tag defaults to the top level org
+      =?  where.act  ?=(~ where.act)  /[name.noun.org]
+      =.  parent-path.org.act  where.act
       :-  (produce-org-events:lib id.org org.act)
-      =.  parent-path.org.act
-        (snoc parent-path.noun.org name.noun.org)
       %^  modify-org:lib
         noun.org  where.act
       |=  =org:lib
       =-  org(sub-orgs -)
+      ?<  (~(has py sub-orgs.org) name.org.act)
       (~(put py sub-orgs.org) [name.org org]:act)
     ::
         %delete-org
-      !!  ::  TODO
+      =/  =tag:lib  (weld parent-path.noun.org where.act)
+      :-  (nuke-tag:lib tag)
+      %^  modify-org:lib
+        noun.org  (snip where.act)
+      |=  =org:lib
+      org(sub-orgs (~(del py sub-orgs.org) (rear where.act)))
     ::
         %replace-members
       ::  empty tag defaults to the top level org

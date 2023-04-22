@@ -10,13 +10,12 @@
 ::
 ::  chain info is sourced from receipts. every time an org's
 ::  controller performs a transaction that modifies the org,
-::  they should send the receipt to all ships involved in the
-::  org. (TODO also use indexer as backup source)
+::  they send the receipt to all ships involved in the org.
+::
+::  users can also manually add orgs and sync from chain!
 ::
 ::  when this app receives a receipt, it uses the output to
-::  poke events into %social-graph, and makes a note to check
-::  the transaction-hash on the next batch to confirm that the
-::  receipt was non-fraudulent.
+::  poke events into %social-graph.
 ::
 ::  app state is the set of transaction hashes we need to check
 ::  for inclusion/validity in the next batch. (TODO)
@@ -85,6 +84,12 @@
             %orgs-action
           ?>  =(src our):bowl
           (handle-action:hc !<(orgs-action vase))
+            %orgs-add
+          ?>  =(src our):bowl
+          `state(my-orgs (~(put by my-orgs.state) !<([id:smart @t] vase)))
+            %orgs-del
+          ?>  =(src our):bowl
+          `state(my-orgs (~(del by my-orgs.state) !<(id:smart vase)))
             %orgs-resync
           ?>  =(src our):bowl
           ::  sync our local representation to the on-chain
