@@ -42,8 +42,10 @@
   =/  org
     =+  (need (scry-state org-id.act))
     (husk org:lib - `this.context ~)
-  ::  to manage, caller must control identified org
-  ?>  =(id.caller.context controller.noun.org)
+  ::  to manage, caller must control *identified* org, or any
+  ::  org directly above it in the tree.
+  ?>  (valid-controller:lib where.act noun.org id.caller.context)
+  ::
   ?:  ?&  ?=(%delete-org -.act)
           ?|  =(where.act /[name.noun.org])
               =(where.act ~)
@@ -83,11 +85,14 @@
       =/  =tag:lib  (weld parent-path.noun.org where.act)
       :-  (nuke-tag:lib tag)
       %^  modify-org:lib
-        noun.org  (snip where.act)
+        noun.org  (snip `(list @ta)`where.act)
       |=  =org:lib
-      org(sub-orgs (~(del py sub-orgs.org) (rear where.act)))
+      =+  (rear where.act)
+      ::  org must exist to be deleted
+      ?>  (~(has py sub-orgs.org) -)
+      org(sub-orgs (~(del py sub-orgs.org) -))
     ::
-        %replace-members
+        %replace-members  ::  TODO remove this?
       ::  empty tag defaults to the top level org
       =?  where.act  ?=(~ where.act)  /[name.noun.org]
       =/  =tag:lib  (weld parent-path.noun.org where.act)

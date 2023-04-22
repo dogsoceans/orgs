@@ -30,9 +30,10 @@
     [%add-sub-org org-id=id where=tag =org]
   ::
   ::  "it's over" –– calling on top-level org is an item burn
-    [%delete-org org-id=id where=tag]
+    [%delete-org org-id=id where=tag ~]
   ::
   ::  replace existing member-set of an org/sub-org
+  ::  TODO remove this?
     [%replace-members org-id=id where=tag new=(pset ship)]
   ::
   ::  add address to member-set of an org/sub-org
@@ -104,15 +105,24 @@
 ++  modify-org
   |=  [=org at=tag =org-mod]
   ^+  org
-  ?~  at
-    (org-mod org)
+  ?~  at  (org-mod org)
   ?>  =(i.at name.org)
-  ?~  t.at
-    (org-mod org)
+  ?~  t.at  (org-mod org)
   %=    org
       sub-orgs
     %+  ~(put py sub-orgs.org)
       i.t.at
     $(at t.at, org (~(got py sub-orgs.org) i.t.at))
   ==
+::
+::  given a path, find allowed controllers for sub-org
+::
+++  valid-controller
+  |=  [where=tag =org who=id]
+  ^-  ?
+  ?:  =(who controller.org)  %.y
+  ?~  where  %.n
+  ?>  =(i.where name.org)
+  ?~  t.where  %.n
+  $(where t.where, org (~(got py sub-orgs.org) i.t.where))
 --

@@ -57,7 +57,7 @@
           /
           `'an org controlled by 0xd387...'
           addr-1:zigs
-          ~
+          (make-pset:smart ~[~hodzod ~walrus])
           %-  make-pmap:smart
           :~  :-  'my-sub-org'
               ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
@@ -198,7 +198,7 @@
           /
           `'newdesc'
           addr-1:zigs
-          ~
+          (make-pset:smart ~[~hodzod ~walrus])
           %-  make-pmap:smart
           :~  :-  'my-sub-org'
               ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
@@ -225,7 +225,7 @@
           /
           `'an org controlled by 0xd387...'
           addr-1:zigs
-          ~
+          (make-pset:smart ~[~hodzod ~walrus])
           %-  make-pmap:smart
           :~  :-  'my-sub-org'
               ['my-sub-org' /my-test-org `'newdesc' addr-2:zigs ~ ~]
@@ -235,7 +235,7 @@
       events=`~
   ==
 ::
-++  test-yx-edit-org-controller
+++  test-yw-edit-sub-org-controller  ^-  test-txn
   :^    chain
       [sequencer default-town-id batch=1 eth-block-height=0]
     :+  fake-sig
@@ -252,12 +252,25 @@
           /
           `'an org controlled by 0xd387...'
           addr-1:zigs
-          ~
+          (make-pset:smart ~[~hodzod ~walrus])
           %-  make-pmap:smart
           :~  :-  'my-sub-org'
               ['my-sub-org' /my-test-org ~ addr-1:zigs ~ ~]
           ==
       ==
+      burned=`~
+      events=`~
+  ==
+::
+++  test-yv-edit-sub-org-nonexistent  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    :+  fake-sig
+      [%edit-org my-test-org-id /my-test-org/not-here `'newdesc' ~]
+    my-shell
+  :*  gas=~
+      errorcode=`%6
+      modified=`~
       burned=`~
       events=`~
   ==
@@ -282,7 +295,7 @@
           /
           `'an org controlled by 0xd387...'
           addr-1:zigs
-          ~
+          (make-pset:smart ~[~hodzod ~walrus])
           %-  make-pmap:smart
           ^-  (list [@t org:org-lib])
           :~  ['my-sub-org' ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]]
@@ -339,7 +352,7 @@
       events=`~
   ==
 ::
-++  test-xw-add-sub-org-to-sub-org  ^-  test-txn
+++  test-xv-add-sub-org-to-sub-org  ^-  test-txn
   =/  loach-sub-org
     ^-  org:org-lib
     ['loach' /my-test-org/my-sub-org ~ addr-1:zigs (make-pset:smart ~[~hodzod]) ~]
@@ -357,7 +370,7 @@
           /
           `'an org controlled by 0xd387...'
           addr-1:zigs
-          ~
+          (make-pset:smart ~[~hodzod ~walrus])
           %-  make-pmap:smart
           :_  ~
           :-  'my-sub-org'
@@ -372,6 +385,348 @@
       :-  ~
       :~  :+  id.p:orgs-pact  %add-tag
           [/my-test-org/my-sub-org/loach [%address my-test-org-id] [%ship ~hodzod]]
+      ==
+  ==
+::
+::  tests for %delete-org
+::
+++  test-wz-delete-org  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%delete-org my-test-org-id /my-test-org ~] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      modified=`~
+      ::  burned
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+          ==
+      ==
+      ::  events
+      `[id.p:orgs-pact %nuke-top-level-tag /my-test-org]^~
+  ==
+::
+++  test-wy-delete-org-empty-path  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%delete-org my-test-org-id / ~] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      modified=`~
+      ::  burned
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+          ==
+      ==
+      ::  events
+      `[id.p:orgs-pact %nuke-top-level-tag /my-test-org]^~
+  ==
+::
+++  test-wx-delete-sub-org  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%delete-org my-test-org-id /my-test-org/my-sub-org ~] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus])
+          ~
+      ==
+      burned=`~
+      ::  events
+      `[id.p:orgs-pact %nuke-tag /my-test-org/my-sub-org]^~
+  ==
+::
+++  test-ww-delete-nonexistent-sub-org  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%delete-org my-test-org-id /my-test-org/not-here ~] my-shell]
+  :*  gas=~
+      errorcode=`%6
+      modified=`~
+      burned=`~
+      events=`~
+  ==
+::
+::  tests for %replace-members (TODO)
+::
+::
+::  tests for %add-member
+::
+++  test-vz-add-member  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-member my-test-org-id /my-test-org ~sampel] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus ~sampel])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~sampel]]
+      ==
+  ==
+::
+++  test-vy-add-member-empty-path  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-member my-test-org-id / ~sampel] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus ~sampel])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~sampel]]
+      ==
+  ==
+::
+++  test-vx-add-member-sub-org  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-member my-test-org-id /my-test-org/my-sub-org ~sampel] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs (make-pset:smart ~[~sampel]) ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~sampel]]
+      ==
+  ==
+::
+++  test-vw-add-member-sub-org-controller  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    =+  [caller-2 ~ id.p:orgs-pact [1 1.000.000] default-town-id 0]
+    [fake-sig [%add-member my-test-org-id /my-test-org/my-sub-org ~sampel] -]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs (make-pset:smart ~[~sampel]) ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~sampel]]
+      ==
+  ==
+::
+++  test-vv-add-member-nonexistent-sub-org  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-member my-test-org-id /my-test-org/not-here ~sampel] my-shell]
+  :*  gas=~
+      errorcode=`%6
+      modified=`~
+      burned=`~
+      events=`~
+  ==
+::
+++  test-vu-add-member-already-in  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%add-member my-test-org-id / ~hodzod] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %add-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~hodzod]]
+      ==
+  ==
+::
+::  tests for %del-member
+::
+++  test-uz-del-member  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%del-member my-test-org-id /my-test-org ~hodzod] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %del-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~hodzod]]
+      ==
+  ==
+::
+++  test-uy-del-member-empty-path  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%del-member my-test-org-id / ~hodzod] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %del-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~hodzod]]
+      ==
+  ==
+::
+++  test-uv-del-member-nonexistent-sub-org  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%del-member my-test-org-id /my-test-org/not-here ~sampel] my-shell]
+  :*  gas=~
+      errorcode=`%6
+      modified=`~
+      burned=`~
+      events=`~
+  ==
+::
+++  test-uu-del-member-not-in  ^-  test-txn
+  :^    chain
+      [sequencer default-town-id batch=1 eth-block-height=0]
+    [fake-sig [%del-member my-test-org-id / ~sampel] my-shell]
+  :*  gas=~
+      errorcode=`%0
+      ::  modified the org
+      :-  ~
+      %-  make-chain-state
+      :_  ~
+      %-  my-test-org
+      :*  'my-test-org'
+          /
+          `'an org controlled by 0xd387...'
+          addr-1:zigs
+          (make-pset:smart ~[~hodzod ~walrus])
+          %-  make-pmap:smart
+          :~  :-  'my-sub-org'
+              ['my-sub-org' /my-test-org ~ addr-2:zigs ~ ~]
+      ==  ==
+      burned=`~
+      ::  events
+      :-  ~
+      :~  :+  id.p:orgs-pact  %del-tag
+          [/my-test-org [%address my-test-org-id] [%ship ~sampel]]
       ==
   ==
 --
