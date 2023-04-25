@@ -139,7 +139,25 @@
 ++  handle-scry
   |=  =path
   ^-  (unit (unit cage))
-  !!
+  ?:  |(?=(~ path) !=(%x i.path) ?=(~ t.path))  ~
+  =/  path  t.path
+  ?+    path  ~
+      [%get-members ^]
+    ::  /get-members/[org-id]/[sub-org]
+    =/  =org-id   (slav %ux i.t.path)
+    =/  =tag:con  t.t.path
+    =-  ``noun+!>(`(set ship)`-)
+    =/  res
+      .^  graph-result:sg  %gx
+        (scot %p our.bowl)  %social-graph  (scot %da now.bowl)
+        (weld /nodes/orgs/address/(scot %ux org-id) (snoc tag %noun))
+      ==
+    ?>  ?=(%nodes -.res)
+    %-  ~(gas in *(set ship))
+    %+  murn  ~(tap in +.res)
+    |=  =node:sg
+    ?.(?=(%ship -.node) ~ `+.node)
+  ==
 ::
 ::  +ingest-receipt: take receipt from org controller, and generate
 ::  pokes to %social-graph. store hash in state until next batch
