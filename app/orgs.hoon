@@ -27,6 +27,8 @@
   $:  %0
       my-orgs=(map org-id @t)  ::  org item ID to org name
       hashes=(map hash:smart sequencer-receipt:uqbar)
+      last-update-time=@da
+      trackers=(map @tas @da)  ::  local apps wanting orgs-updates
   ==
 +$  card  card:agent:gall
 --
@@ -74,6 +76,13 @@
       ^-  (quip card _this)
       =^  cards  state
         ?+    mark  (on-poke:def mark vase)
+            %tracker-request
+          ?>  =(src our):bowl
+          =-  `state(trackers -)
+          (~(put by trackers.state) !<(@tas vase) now.bowl)
+            %tracker-stop
+          ?>  =(src our):bowl
+          `state(trackers (~(del by trackers.state) !<(@tas vase)))
             %orgs-receipt
           (ingest-receipt:hc !<(orgs-receipt vase))
             %wallet-update
@@ -114,19 +123,30 @@
     ++  on-agent
       |=  [=wire =sign:agent:gall]
       ^-  (quip card _this)
-      ?.  ?=([%batch-watch ~] wire)
-        (on-agent:def wire sign)
-      ?.  ?=(%fact -.sign)
-        ?:  ?=(%kick -.sign)
-          ::  attempt to re-sub
-          [[watch-indexer:hc ~] this]
-        (on-agent:def wire sign)
-      =/  upd  !<(update:indexer q.cage.sign)
-      ?.  ?=(%batch-order -.upd)  `this
-      ::  when indexer has received a new batch,
-      ::  check on all our txn hashes and clear
-      ::  if receipts were valid. (TODO)
-      `this(hashes.state ~)
+      ?+    wire  (on-agent:def wire sign)
+          [%orgs-update @ ~]
+        ::  catalog poke-acks from apps tracking us
+        =/  app=@tas  i.t.wire
+        ?.  ?=(%poke-ack -.sign)  `this
+        ?^  p.sign
+          ::  tracker failed on poke, remove them from trackers
+          `this(trackers.state (~(del by trackers.state) app))
+        ::  put ack-time in tracker map
+        `this(trackers.state (~(put by trackers.state) app now.bowl))
+      ::
+          [%batch-watch ~]
+        ?.  ?=(%fact -.sign)
+          ?:  ?=(%kick -.sign)
+            ::  attempt to re-sub
+            [[watch-indexer:hc ~] this]
+          (on-agent:def wire sign)
+        =/  upd  !<(update:indexer q.cage.sign)
+        ?.  ?=(%batch-order -.upd)  `this
+        ::  when indexer has received a new batch,
+        ::  check on all our txn hashes and clear
+        ::  if receipts were valid. (TODO)
+        `this(hashes.state ~)
+      ==
     ::
     ++  on-peek   handle-scry:hc
     ++  on-watch  on-watch:def
@@ -144,6 +164,7 @@
   ?+    path  ~
       [%get-members ^]
     ::  /get-members/[org-id]/[sub-org]
+    ::  returns (set ship)
     =/  =org-id   (slav %ux i.t.path)
     =/  =tag:con  t.t.path
     =-  ``noun+!>(`(set ship)`-)
@@ -190,6 +211,13 @@
     ~&  >>>  "orgs: got transaction to contract other than designated one"
     `state
   ~&  >>  "orgs: ingesting receipt from {<src.bowl>}"
+  ::  poke all watching trackers with update and
+  ::  remove trackers who have not ack'd recently enough.
+  =.  trackers.state
+    %-  malt
+    %+  skim  ~(tap by trackers.state)
+    |=  [app=@tas last-ack=@da]
+    (gte last-ack last-update-time.state)
   ::  once verified, take output and convert events to pokes
   ::  if we were not yet in this org, produce all tags for the org
   ::  and pipe them into social-graph to synchronize full state
@@ -197,6 +225,10 @@
         my-orgs  (~(put by my-orgs.state) org-id name.org)
         hashes  (~(put by hashes.state) hash sequencer-receipt)
       ==
+  %+  weld
+    %+  make-tracker-updates
+      trackers.state
+    ;;(action:con calldata.transaction.sequencer-receipt)
   ?.  (~(has by my-orgs.state) org-id)
     (org-to-graph-pokes org-id org)
   %+  turn  events.output.sequencer-receipt
@@ -231,7 +263,7 @@
   ::  if transaction was %del-member, send receipt to them too
   =?    mems
       ?=(%del-member p.calldata.transaction.sequencer-receipt)
-    [;;(ship |3:q.calldata.transaction.sequencer-receipt) mems]
+    [;;(ship |2:q.calldata.transaction.sequencer-receipt) mems]
   :_  state(my-orgs (~(put by my-orgs.state) org-id name.org))
   %+  turn  mems
   |=  =ship
@@ -306,4 +338,12 @@
   ^-  card
   %+  ~(watch pass:io /batch-watch)  [our.bowl %uqbar]
   /indexer/orgs/batch-order/(scot %ux orgs-contract-town)
+::
+++  make-tracker-updates
+  |=  [trackers=(map @tas @da) =action:con]
+  ^-  (list card)
+  %+  turn  ~(tap in ~(key by trackers))
+  |=  app=@tas
+  %+  ~(poke pass:io /orgs-update/[app])
+  [our.bowl app]  orgs-action+!>(action)
 --
