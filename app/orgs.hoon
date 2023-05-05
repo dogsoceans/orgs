@@ -45,7 +45,7 @@
     ++  on-init
       :_  this(state *_state)
       :-  watch-indexer:hc
-      ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl))
+      ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl)/$)
         ~
       ~&  >>>  "orgs: error: must have %social-graph installed"
       ~&  >>>  "automatically installing %nectar from ~bacrys now"
@@ -62,7 +62,7 @@
       ?.  =(%0 -.q.old)  on-init
       :_  this(state !<(_state old))
       :-  watch-indexer:hc
-      ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl))
+      ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl)/$)
         ~
       ~&  >>>  "orgs: error: must have %social-graph installed"
       ~&  >>>  "automatically installing %nectar from ~bacrys now"
