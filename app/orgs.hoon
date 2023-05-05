@@ -25,7 +25,7 @@
 ::  org's member-set, just scry %social-graph.
 +$  state
   $:  %0
-      my-orgs=(map org-id @t)  ::  org item ID to org name
+      my-orgs=(map org-id org:con)  ::  org item ID to org
       hashes=(map hash:smart sequencer-receipt:uqbar)
       last-update-time=@da
       trackers=(map @tas @da)  ::  local apps wanting orgs-updates
@@ -93,20 +93,20 @@
             %orgs-action
           ?>  =(src our):bowl
           (handle-action:hc !<(orgs-action vase))
-            %orgs-add
-          ?>  =(src our):bowl
-          `state(my-orgs (~(put by my-orgs.state) !<([id:smart @t] vase)))
-            %orgs-del
-          ?>  =(src our):bowl
-          `state(my-orgs (~(del by my-orgs.state) !<(id:smart vase)))
+          ::   %orgs-add
+          :: ?>  =(src our):bowl
+          :: `state(my-orgs (~(put by my-orgs.state) !<([id:smart @t] vase)))
+          ::   %orgs-del
+          :: ?>  =(src our):bowl
+          :: `state(my-orgs (~(del by my-orgs.state) !<(id:smart vase)))
             %orgs-resync
           ?>  =(src our):bowl
           ::  sync our local representation to the on-chain
           ::  item for each org we know to track.
           ~&  >>  "orgs: resyncing representations to graph"
-          =/  org-map=(map id:smart org:con)
+          =.  my-orgs.state
             %-  ~(urn by my-orgs.state)
-            |=  [=id:smart @t]
+            |=  [=id:smart =org:con]
             =/  =update:indexer
               .^  update:indexer  %gx
                 (scot %p our.bowl)  %indexer  (scot %da now.bowl)
@@ -116,7 +116,7 @@
             ?>  ?=(%& -.item.update)
             ;;(org:con noun.p.item.update)
           :_  state
-          (zing (turn ~(tap by org-map) org-to-graph-pokes:hc))
+          (zing (turn ~(tap by my-orgs.state) org-to-graph-pokes:hc))
         ==
       [cards this]
     ::
@@ -162,12 +162,16 @@
   ?:  |(?=(~ path) !=(%x i.path) ?=(~ t.path))  ~
   =/  path  t.path
   ?+    path  ~
+      [%get-all-orgs ~]
+    ::  /get-all-orgs
+    ::  returns a map of orgs
+    ``orgs-update+!>(`orgs-update`[%orgs my-orgs.state])
       [%get-members ^]
     ::  /get-members/[org-id]/[sub-org]
     ::  returns (set ship)
     =/  =org-id   (slav %ux i.t.path)
     =/  =tag:con  t.t.path
-    =-  ``noun+!>(`(set ship)`-)
+    =-  ``orgs-update+!>(`orgs-update`[%members -])
     =/  res
       .^  graph-result:sg  %gx
         (scot %p our.bowl)  %social-graph  (scot %da now.bowl)
@@ -222,7 +226,7 @@
   ::  if we were not yet in this org, produce all tags for the org
   ::  and pipe them into social-graph to synchronize full state
   :_  %=  state
-        my-orgs  (~(put by my-orgs.state) org-id name.org)
+        my-orgs  (~(put by my-orgs.state) org-id org)
         hashes  (~(put by hashes.state) hash sequencer-receipt)
       ==
   %+  weld
@@ -264,7 +268,7 @@
   =?    mems
       ?=(%del-member p.calldata.transaction.sequencer-receipt)
     [;;(ship |2:q.calldata.transaction.sequencer-receipt) mems]
-  :_  state(my-orgs (~(put by my-orgs.state) org-id name.org))
+  :_  state(my-orgs (~(put by my-orgs.state) org-id org))
   %+  turn  mems
   |=  =ship
   %+  ~(poke pass:io /share-receipt)

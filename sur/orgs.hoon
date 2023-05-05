@@ -16,4 +16,9 @@
   [=org-id =hash:smart =sequencer-receipt:uqbar]
 ::
 +$  orgs-action  (pair address:smart action:con)
+::
++$  orgs-update
+  $%  [%members (set ship)]
+      [%orgs (map org-id org:con)]
+  ==
 --
