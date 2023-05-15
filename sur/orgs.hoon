@@ -15,7 +15,23 @@
 +$  orgs-receipt
   [=org-id =hash:smart =sequencer-receipt:uqbar]
 ::
-+$  orgs-action  (pair address:smart action:con)
++$  org
+  $:  name=@t
+      parent-path=path
+      desc=(unit @t)
+      controller=id:smart
+      members=(set ship)
+  ==
+::
++$  orgs-action
+  %+  pair  address:smart
+  $%  [%create =org]
+      [%edit-org org-id=id:smart where=path desc=(unit @t) controller=(unit id:smart)]
+      [%add-sub-org org-id=id:smart where=path =org]
+      [%delete-org org-id=id:smart where=path ~]
+      [%add-member org-id=id:smart where=path =ship]
+      [%del-member org-id=id:smart where=path =ship]
+  ==
 ::
 +$  orgs-update
   $%  [%members (set ship)]

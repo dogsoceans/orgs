@@ -65,17 +65,8 @@
           [%parent-path pa]
           [%desc so:dejs-soft:format]
           [%controller (se %ux)]
-          [%members (as-pset (se %p))]
-          [%sub-orgs (om-pmap parse-org)]
+          [%members (as (se %p))]
       ==
-    ++  as-pset
-      |*  a=fist
-      (cu ~(gas pn:smart:orgs *(pset:smart:orgs _$:a)) (ar a))
-    ++  om-pmap
-      |*  wit=fist
-      |=  jon=^json
-      ?>  ?=([%o *] jon)
-      (~(run py:smart:orgs p.jon) wit)
     ++  se-soft
       |=  aur=@tas
       |=  jon=^json

@@ -57,10 +57,10 @@
     ++  on-save  !>(state)
     ::
     ++  on-load
-      |=  old=vase
+      |=  =old=vase
       ^-  (quip card _this)
-      ?.  =(%0 -.q.old)  on-init
-      :_  this(state !<(_state old))
+      ?.  =(%0 -.q.old-vase)  on-init
+      :_  this(state !<(_state old-vase))
       :-  watch-indexer:hc
       ?:  .^(? %gu /(scot %p our.bowl)/social-graph/(scot %da now.bowl)/$)
         ~
@@ -292,6 +292,8 @@
         orgs-contract-town
         name.org.q.orgs-action
     ==
+  =/  contract-orgs-action=action:con
+    (prep orgs-action)
   :_  state  :_  ~
   %+  ~(poke pass:io /orgs-txn)
     [our.bowl %wallet]
@@ -302,8 +304,32 @@
       p.orgs-action
       orgs-contract-id
       orgs-contract-town
-      noun+q.orgs-action
+      noun+contract-orgs-action
   ==
+::
+++  prep
+  |=  =orgs-action
+  ^-  action:con
+  |^
+  ?-    -.q.orgs-action
+      ?(%edit-org %delete-org %add-member %del-member)
+    q.orgs-action
+      %create
+    q.orgs-action(org (porg org.q.orgs-action))
+      %add-sub-org
+    q.orgs-action(org (porg org.q.orgs-action))
+  ==
+  ++  porg
+    |=  =org
+    ^-  org:con
+    :*  name.org
+        parent-path.org
+        desc.org
+        controller.org
+        (make-pset:smart ~(tap in members.org))
+        sub-orgs=~
+    ==
+  --
 ::
 ++  graph-poke
   |=  =org-event:con
